@@ -46,13 +46,11 @@ import { TableModule } from 'primeng/table';
     CheckboxModule,
     ToastModule,
     DropdownModule,
-    DialogModule,
-    AutoCompleteModule,
     TabViewModule,
     TableModule
   ],
   template: `
-     <p-toast></p-toast>
+    <p-toast></p-toast>
     <div *ngIf="ticket; else loading">
       <p-panel>
         <ng-template pTemplate="header">
@@ -118,19 +116,42 @@ import { TableModule } from 'primeng/table';
                 <ul class="list-none p-0 m-0">
                   <li class="flex items-center justify-between mb-4">
                     <span class="font-semibold">Estado:</span>
-                    <p-dropdown [options]="statusOptions" [(ngModel)]="ticket.status" (onChange)="onStatusChange($event)"></p-dropdown>
+                    <p-dropdown
+                        [options]="statusOptions"
+                        [(ngModel)]="ticket.status"
+                        optionLabel="label"
+                        optionValue="value"
+                        (onChange)="onStatusChange($event)"></p-dropdown>
                   </li>
                   <li class="flex items-center justify-between mb-4">
                     <span class="font-semibold">Prioridad:</span>
-                     <p-dropdown [options]="priorityOptions" [(ngModel)]="ticket.priority" (onChange)="onPriorityChange($event)"></p-dropdown>
+                     <p-dropdown
+                        [options]="priorityOptions"
+                        [(ngModel)]="ticket.priority"
+                        optionLabel="label"
+                        optionValue="value"
+                        (onChange)="onPriorityChange($event)"></p-dropdown>
                   </li>
                   <li class="flex items-center justify-between mb-4">
                     <span class="font-semibold">Agente:</span>
-                    <p-dropdown [options]="agentOptions" [(ngModel)]="ticket.assignedAgentId" placeholder="No asignado" [showClear]="true" (onChange)="onAssignmentChange()"></p-dropdown>
+                    <p-dropdown
+                        [options]="agentOptions"
+                        [(ngModel)]="ticket.assignedAgentId"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="No asignado" [showClear]="true"
+                        (onChange)="onAssignmentChange()"></p-dropdown>
                   </li>
                   <li class="flex items-center justify-between mb-4">
                     <span class="font-semibold">Grupo:</span>
-                     <p-dropdown [options]="groupOptions" [(ngModel)]="ticket.assignedGroupId" placeholder="Sin grupo" [showClear]="true" (onChange)="onAssignmentChange()"></p-dropdown>
+                     <p-dropdown
+                        [options]="groupOptions"
+                        [(ngModel)]="ticket.assignedGroupId"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Sin grupo"
+                        [showClear]="true"
+                        (onChange)="onAssignmentChange()"></p-dropdown>
                   </li>
                   <li class="flex items-center justify-between mb-3">
                     <span class="font-semibold">Solicitante:</span>
@@ -157,7 +178,8 @@ import { TableModule } from 'primeng/table';
   `
 })
 export class TicketDetailComponent implements OnInit, OnDestroy {
- ticket: Ticket | null = null;
+
+  ticket: Ticket | null = null;
   comments$!: Observable<Comment[]>;
   mergedTickets$!: Observable<Ticket[]>;
   commentForm: FormGroup;
@@ -316,7 +338,6 @@ export class TicketDetailComponent implements OnInit, OnDestroy {
       }));
   }
 
-  // Helper para el template, aunque no lo estemos usando directamente ahora
   getStatusText(status: TicketStatus): string {
     return TicketStatus[status]?.replace(/([A-Z])/g, ' $1').trim() || 'Desconocido';
   }
