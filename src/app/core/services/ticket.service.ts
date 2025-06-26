@@ -8,6 +8,7 @@ import { ChangeStatusDto } from '../models/change-status.dto';
 import { ChangePriorityDto } from '../models/change-priority.dto';
 import { CreateTicketDto } from '../models/create-ticket.dto';
 import { AssignTicketDto } from '../models/assign-ticket.dto';
+import { MergeTicketsDto } from '../models/merge-tickets.dto';
 
 @Injectable({
   providedIn: 'root'
@@ -40,5 +41,8 @@ export class TicketService {
   }
   assignTicket(ticketId: number, dto: AssignTicketDto): Observable<Ticket> {
     return this.http.put<Ticket>(`${this.apiUrl}/${ticketId}/assign`, dto);
+  }
+  mergeTickets(dto: MergeTicketsDto): Observable<Ticket> {
+    return this.http.post<Ticket>(`${this.apiUrl}/merge`, dto);
   }
 }

@@ -25,8 +25,10 @@ import { ButtonModule } from 'primeng/button';
   template: `
     <div class="p-card p-4">
       <div class="flex items-center justify-between mb-4">
-          <h2 class="text-2xl font-bold">Gestión de Tickets</h2>
-          <a routerLink="/tickets/new" pButton icon="pi pi-plus" label="Nuevo Ticket"></a>
+        <div class="flex gap-2">
+            <a routerLink="/tickets/merge" pButton icon="pi pi-compass" label="Fusionar Tickets" class="p-button-outlined"></a>
+            <a routerLink="/tickets/new" pButton icon="pi pi-plus" label="Nuevo Ticket"></a>
+          </div>
       </div>
 
       <p-table

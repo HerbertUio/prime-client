@@ -1,10 +1,9 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Observable, Subject, switchMap, takeUntil } from 'rxjs';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 
-// Models, DTOs and Services
 import { Ticket } from '../../../core/models/ticket.model';
 import { TicketService } from '../../../core/services/ticket.service';
 import { TicketStatus } from '../../../core/models/ticket-status.enum';
@@ -12,8 +11,6 @@ import { TicketPriority } from '../../../core/models/ticket-priority.enum';
 import { AddCommentDto } from '../../../core/models/add-comment.dto';
 import { AssignTicketDto } from '../../../core/models/assign-ticket.dto';
 
-
-// PrimeNG Modules
 import { PanelModule } from 'primeng/panel';
 import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
@@ -24,7 +21,9 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { DropdownModule } from 'primeng/dropdown';
-import { FormsModule } from '@angular/forms';
+import { DialogModule } from 'primeng/dialog';
+import { AutoCompleteModule } from 'primeng/autocomplete';
+import { MergeTicketsDto } from '../../../core/models/merge-tickets.dto';
 
 @Component({
   selector: 'app-ticket-detail',
@@ -43,7 +42,9 @@ import { FormsModule } from '@angular/forms';
     EditorModule,
     CheckboxModule,
     ToastModule,
-    DropdownModule
+    DropdownModule,
+    DialogModule,
+    AutoCompleteModule
   ],
   template: `
     <p-toast></p-toast>
@@ -128,7 +129,6 @@ import { FormsModule } from '@angular/forms';
   `
 })
 export class TicketDetailComponent implements OnInit, OnDestroy {
-
   ticket: Ticket | null = null;
   comments$!: Observable<Comment[]>;
   commentForm: FormGroup;
