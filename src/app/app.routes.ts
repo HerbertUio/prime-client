@@ -13,10 +13,12 @@ export const routes: Routes = [
             },
             {
                 path: 'tickets',
-                // Carga diferida (lazy loading) del componente de la lista de tickets
                 loadComponent: () => import('./features/tickets/ticket-list/ticket-list.component').then(m => m.TicketListComponent)
+            },
+            {
+                path: 'tickets/:id',
+                loadComponent: () => import('./features/tickets/ticket-detail/ticket-detail.component').then(m => m.TicketDetailComponent)
             }
-            // Aquí añadiremos las rutas para el detalle, creación, etc.
         ]
     }
 ];

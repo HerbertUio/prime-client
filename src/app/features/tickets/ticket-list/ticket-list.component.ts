@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { Observable } from 'rxjs';
+import { Router } from '@angular/router';
 
 import { Ticket } from '../../../core/models/ticket.model';
 import { TicketStatus } from '../../../core/models/ticket-status.enum';
@@ -22,7 +23,7 @@ import { ButtonModule } from 'primeng/button';
   ],
   template: `
     <div class="p-card p-4">
-      <h2 class="text-2xl font-bold mb-4">Tickets</h2>
+      <h2 class="text-2xl font-bold mb-4">Gestión de Tickets</h2>
 
       <p-table
         [value]="(tickets$ | async) || []"
@@ -55,7 +56,7 @@ import { ButtonModule } from 'primeng/button';
             </td>
             <td>{{ ticket.createdDate | date:'dd/MM/yyyy h:mm a' }}</td>
             <td>
-              <button pButton pRipple icon="pi pi-eye" class="p-button-rounded p-button-info p-button-text"></button>
+              <button pButton pRipple icon="pi pi-eye" class="p-button-rounded p-button-info p-button-text" (click)="viewTicket(ticket.id)"></button>
             </td>
           </tr>
         </ng-template>
@@ -76,10 +77,13 @@ export class TicketListComponent implements OnInit {
   Priority = TicketPriority;
 
 
-  constructor(private ticketService: TicketService) { }
+  constructor(private ticketService: TicketService, private router: Router) { }
 
   ngOnInit(): void {
     this.tickets$ = this.ticketService.getAllTickets();
+  }
+  viewTicket(id: number): void {
+    this.router.navigate(['/tickets', id]);
   }
   getStatusText(status: TicketStatus): string {
     return TicketStatus[status]?.replace(/([A-Z])/g, ' $1').trim() || 'Desconocido';
