@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { Observable } from 'rxjs';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 
 import { Ticket } from '../../../core/models/ticket.model';
 import { TicketStatus } from '../../../core/models/ticket-status.enum';
@@ -19,11 +19,15 @@ import { ButtonModule } from 'primeng/button';
     CommonModule,
     TableModule,
     TagModule,
-    ButtonModule
+    ButtonModule,
+    RouterModule
   ],
   template: `
     <div class="p-card p-4">
-      <h2 class="text-2xl font-bold mb-4">Gestión de Tickets</h2>
+      <div class="flex items-center justify-between mb-4">
+          <h2 class="text-2xl font-bold">Gestión de Tickets</h2>
+          <a routerLink="/tickets/new" pButton icon="pi pi-plus" label="Nuevo Ticket"></a>
+      </div>
 
       <p-table
         [value]="(tickets$ | async) || []"
