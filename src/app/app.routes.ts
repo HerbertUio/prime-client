@@ -1,12 +1,19 @@
 import { Routes } from '@angular/router';
 import { MainLayoutComponent } from './layout/main-layout/main-layout.component';
+import { DashboardComponent } from './features/dashboard/dashboard.component';
 
 export const routes: Routes = [
-  {
+ {
         path: '',
         component: MainLayoutComponent,
         children: [
-            { path: '', redirectTo: 'tickets', pathMatch: 'full' },
+            // CAMBIO: La ruta por defecto ahora es el dashboard
+            { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+            // RUTA NUEVA:
+            {
+                path: 'dashboard',
+                loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
+            },
             {
                 path: 'tickets',
                 loadComponent: () => import('./features/tickets/ticket-list/ticket-list.component').then(m => m.TicketListComponent)
