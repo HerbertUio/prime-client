@@ -19,7 +19,7 @@ import { RouterModule, RouterOutlet } from '@angular/router';
 
       <main class="flex-1 flex flex-col">
         <header class="bg-white shadow p-4">
-          <h1 class="text-xl font-semibold">Gestión de Tickets</h1>
+          <h1 class="text-xl font-semibold">Bienvenido</h1>
         </header>
 
         <div class="flex-1 p-6 overflow-y-auto">

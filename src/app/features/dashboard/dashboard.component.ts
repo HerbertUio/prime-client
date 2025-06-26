@@ -26,7 +26,7 @@ interface DashboardStats {
   ],
   template: `
     <div>
-      <h2 class="text-2xl font-bold text-gray-800 mb-4">Bienvenido</h2>
+      <h2 class="text-2xl font-bold text-gray-800 mb-4">Tickets:</h2>
 
       <div *ngIf="stats$ | async as stats; else loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
