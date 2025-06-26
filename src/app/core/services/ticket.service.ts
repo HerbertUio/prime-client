@@ -7,6 +7,7 @@ import { AddCommentDto } from '../models/add-comment.dto';
 import { ChangeStatusDto } from '../models/change-status.dto';
 import { ChangePriorityDto } from '../models/change-priority.dto';
 import { CreateTicketDto } from '../models/create-ticket.dto';
+import { AssignTicketDto } from '../models/assign-ticket.dto';
 
 @Injectable({
   providedIn: 'root'
@@ -36,5 +37,8 @@ export class TicketService {
   }
   createTicket(dto: CreateTicketDto): Observable<Ticket> {
     return this.http.post<Ticket>(this.apiUrl, dto);
+  }
+  assignTicket(ticketId: number, dto: AssignTicketDto): Observable<Ticket> {
+    return this.http.put<Ticket>(`${this.apiUrl}/${ticketId}/assign`, dto);
   }
 }

@@ -1,10 +1,19 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
-import { BehaviorSubject, Observable, Subject, switchMap, takeUntil, tap } from 'rxjs';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Observable, Subject, switchMap, takeUntil } from 'rxjs';
+
+// Models, DTOs and Services
+import { Ticket } from '../../../core/models/ticket.model';
+import { TicketService } from '../../../core/services/ticket.service';
+import { TicketStatus } from '../../../core/models/ticket-status.enum';
+import { TicketPriority } from '../../../core/models/ticket-priority.enum';
+import { AddCommentDto } from '../../../core/models/add-comment.dto';
+import { AssignTicketDto } from '../../../core/models/assign-ticket.dto';
 
 
+// PrimeNG Modules
 import { PanelModule } from 'primeng/panel';
 import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
@@ -15,13 +24,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { DropdownModule } from 'primeng/dropdown';
-
-import { Ticket } from '../../../core/models/ticket.model';
-import { TicketService } from '../../../core/services/ticket.service';
-import { TicketStatus } from '../../../core/models/ticket-status.enum';
-import { TicketPriority } from '../../../core/models/ticket-priority.enum';
-import { AddCommentDto } from '../../../core/models/add-comment.dto';
-
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-ticket-detail',
@@ -43,7 +46,7 @@ import { AddCommentDto } from '../../../core/models/add-comment.dto';
     DropdownModule
   ],
   template: `
-  <p-toast></p-toast>
+    <p-toast></p-toast>
     <div *ngIf="ticket; else loading">
       <p-panel>
         <ng-template pTemplate="header">
@@ -56,7 +59,7 @@ import { AddCommentDto } from '../../../core/models/add-comment.dto';
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div class="md:col-span-2">
             <p-card header="Descripción">
-              <p class="m-0">{{ ticket.description }}</p>
+              <div [innerHTML]="ticket.description"></div>
             </p-card>
 
             <p-card header="Conversación" styleClass="mt-4">
@@ -86,29 +89,23 @@ import { AddCommentDto } from '../../../core/models/add-comment.dto';
                 <ul class="list-none p-0 m-0">
                   <li class="flex items-center justify-between mb-4">
                     <span class="font-semibold">Estado:</span>
-                    <p-dropdown
-                      [options]="statusOptions"
-                      [(ngModel)]="ticket.status"
-                      optionLabel="label"
-                      optionValue="value"
-                      (onChange)="onStatusChange($event)"></p-dropdown>
+                    <p-dropdown [options]="statusOptions" [(ngModel)]="ticket.status" (onChange)="onStatusChange($event)"></p-dropdown>
                   </li>
                   <li class="flex items-center justify-between mb-4">
                     <span class="font-semibold">Prioridad:</span>
-                     <p-dropdown
-                      [options]="priorityOptions"
-                      [(ngModel)]="ticket.priority"
-                      optionLabel="label"
-                      optionValue="value"
-                      (onChange)="onPriorityChange($event)"></p-dropdown>
+                     <p-dropdown [options]="priorityOptions" [(ngModel)]="ticket.priority" (onChange)="onPriorityChange($event)"></p-dropdown>
+                  </li>
+                  <li class="flex items-center justify-between mb-4">
+                    <span class="font-semibold">Agente:</span>
+                    <p-dropdown [options]="agentOptions" [(ngModel)]="ticket.assignedAgentId" placeholder="No asignado" [showClear]="true" (onChange)="onAssignmentChange()"></p-dropdown>
+                  </li>
+                  <li class="flex items-center justify-between mb-4">
+                    <span class="font-semibold">Grupo:</span>
+                     <p-dropdown [options]="groupOptions" [(ngModel)]="ticket.assignedGroupId" placeholder="Sin grupo" [showClear]="true" (onChange)="onAssignmentChange()"></p-dropdown>
                   </li>
                   <li class="flex items-center justify-between mb-3">
                     <span class="font-semibold">Solicitante:</span>
-                    <span>Usuario #{{ ticket.requesterId || 'No asignado' }}</span>
-                  </li>
-                  <li class="flex items-center justify-between mb-3">
-                    <span class="font-semibold">Agente:</span>
-                    <span>{{ ticket.assignedAgentId || 'No asignado' }}</span>
+                    <span>Usuario #{{ ticket.requesterId || 'N/A' }}</span>
                   </li>
                   <li class="flex items-center justify-between mb-3">
                     <span class="font-semibold">Creado:</span>
@@ -124,17 +121,13 @@ import { AddCommentDto } from '../../../core/models/add-comment.dto';
     <ng-template #loading>
       <p>Cargando detalles del ticket...</p>
     </ng-template>
-    `,
+  `,
   styles: `
-  :host ::ng-deep .p-card-body .ql-editor {
-      padding: 0;
-    }
-    :host ::ng-deep .p-card-body p {
-      margin: 0;
-    }
+    :host ::ng-deep .p-card-body .ql-editor { padding: 0; }
+    :host ::ng-deep .p-card-body p { margin: 0; }
   `
 })
-export class TicketDetailComponent implements OnInit {
+export class TicketDetailComponent implements OnInit, OnDestroy {
 
   ticket: Ticket | null = null;
   comments$!: Observable<Comment[]>;
@@ -142,6 +135,8 @@ export class TicketDetailComponent implements OnInit {
 
   statusOptions: { label: string, value: number }[];
   priorityOptions: { label: string, value: number }[];
+  agentOptions: { label: string, value: number }[];
+  groupOptions: { label: string, value: number }[];
 
   private ticketId!: number;
   private unsubscribe$ = new Subject<void>();
@@ -160,6 +155,18 @@ export class TicketDetailComponent implements OnInit {
 
     this.statusOptions = this.getEnumOptions(TicketStatus);
     this.priorityOptions = this.getEnumOptions(TicketPriority);
+
+    this.agentOptions = [
+      { label: 'Carlos Aguirre', value: 1 },
+      { label: 'Amparo Calderón', value: 2 },
+      { label: 'Jorge Soliz', value: 3 }
+    ];
+
+    this.groupOptions = [
+      { label: 'Soporte 1ra Línea', value: 1 },
+      { label: 'Soporte 2da Línea - Redes', value: 2 },
+      { label: 'Soporte 2da Línea - DBA', value: 3 }
+    ];
   }
 
   ngOnInit(): void {
@@ -182,34 +189,35 @@ export class TicketDetailComponent implements OnInit {
   }
 
   loadTicket(): void {
+    if (!this.ticketId) return;
     this.ticketService.getTicketById(this.ticketId).subscribe(data => {
         this.ticket = data;
+        this.cdr.detectChanges();
     });
   }
 
   loadComments(): void {
+    if (!this.ticketId) return;
     this.comments$ = this.ticketService.getComments(this.ticketId);
   }
 
   onAddComment(): void {
-    if (this.commentForm.invalid) {
-      return;
-    }
+    if (this.commentForm.invalid || !this.ticket) return;
 
     const newComment: AddCommentDto = {
       content: this.commentForm.value.content,
       isPrivate: this.commentForm.value.isPrivate,
-      authorId: 1 // Hardcodeado. Se reemplazará con el ID del usuario logueado.
+      authorId: 1
     };
 
-    this.ticketService.addComment(this.ticketId, newComment).subscribe({
+    this.ticketService.addComment(this.ticket.id, newComment).subscribe({
       next: () => {
-        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Comentario añadido correctamente' });
+        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Comentario añadido.' });
         this.commentForm.reset({ content: '', isPrivate: false });
         this.loadComments();
       },
       error: (err) => {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo añadir el comentario' });
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo añadir el comentario.' });
         console.error(err);
       }
     });
@@ -219,13 +227,13 @@ export class TicketDetailComponent implements OnInit {
     if (!this.ticket) return;
     this.ticketService.changeStatus(this.ticket.id, { newStatusId: event.value }).subscribe({
       next: (updatedTicket) => {
-        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Estado del ticket actualizado.' });
-        this.ticket = updatedTicket; // Actualizamos el ticket local con la respuesta del servidor
+        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Estado actualizado.' });
+        this.ticket = updatedTicket;
         this.cdr.detectChanges();
       },
       error: (err) => {
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo actualizar el estado.' });
-        this.loadTicket(); // Revertimos al estado anterior si hay error
+        this.loadTicket();
         console.error(err);
       }
     });
@@ -235,13 +243,35 @@ export class TicketDetailComponent implements OnInit {
       if (!this.ticket) return;
       this.ticketService.changePriority(this.ticket.id, { newPriorityId: event.value }).subscribe({
       next: (updatedTicket) => {
-        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Prioridad del ticket actualizada.' });
-        this.ticket = updatedTicket; // Actualizamos el ticket local con la respuesta del servidor
+        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Prioridad actualizada.' });
+        this.ticket = updatedTicket;
         this.cdr.detectChanges();
       },
       error: (err) => {
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo actualizar la prioridad.' });
-        this.loadTicket(); // Revertimos al estado anterior si hay error
+        this.loadTicket();
+        console.error(err);
+      }
+    });
+  }
+
+  onAssignmentChange(): void {
+    if (!this.ticket) return;
+
+    const dto: AssignTicketDto = {
+      agentId: this.ticket.assignedAgentId,
+      groupId: this.ticket.assignedGroupId
+    };
+
+    this.ticketService.assignTicket(this.ticket.id, dto).subscribe({
+      next: (updatedTicket) => {
+        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Ticket asignado.' });
+        this.ticket = updatedTicket;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo asignar el ticket.' });
+        this.loadTicket();
         console.error(err);
       }
     });
