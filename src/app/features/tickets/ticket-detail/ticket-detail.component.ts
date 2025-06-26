@@ -11,6 +11,7 @@ import { TicketPriority } from '../../../core/models/ticket-priority.enum';
 import { AddCommentDto } from '../../../core/models/add-comment.dto';
 import { AssignTicketDto } from '../../../core/models/assign-ticket.dto';
 
+
 import { PanelModule } from 'primeng/panel';
 import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
@@ -23,7 +24,9 @@ import { ToastModule } from 'primeng/toast';
 import { DropdownModule } from 'primeng/dropdown';
 import { DialogModule } from 'primeng/dialog';
 import { AutoCompleteModule } from 'primeng/autocomplete';
-import { MergeTicketsDto } from '../../../core/models/merge-tickets.dto';
+import { TabViewModule } from 'primeng/tabview';
+import { TableModule } from 'primeng/table';
+
 
 @Component({
   selector: 'app-ticket-detail',
@@ -44,10 +47,12 @@ import { MergeTicketsDto } from '../../../core/models/merge-tickets.dto';
     ToastModule,
     DropdownModule,
     DialogModule,
-    AutoCompleteModule
+    AutoCompleteModule,
+    TabViewModule,
+    TableModule
   ],
   template: `
-    <p-toast></p-toast>
+     <p-toast></p-toast>
     <div *ngIf="ticket; else loading">
       <p-panel>
         <ng-template pTemplate="header">
@@ -63,26 +68,49 @@ import { MergeTicketsDto } from '../../../core/models/merge-tickets.dto';
               <div [innerHTML]="ticket.description"></div>
             </p-card>
 
-            <p-card header="Conversación" styleClass="mt-4">
-              <p-timeline [value]="(comments$ | async) || []" layout="vertical">
-                  <ng-template pTemplate="content" let-comment>
-                      <p-card [header]="'Usuario #' + comment.authorId" [subheader]="(comment.createdAt | date:'full') ?? ''">
-                          <div [innerHTML]="comment.content"></div>
-                      </p-card>
-                  </ng-template>
-              </p-timeline>
-
-              <form [formGroup]="commentForm" (ngSubmit)="onAddComment()" class="mt-6">
-                <p-editor formControlName="content" [style]="{'height':'120px'}"></p-editor>
-                <div class="flex items-center justify-between mt-3">
-                  <div class="flex items-center">
-                      <p-checkbox formControlName="isPrivate" [binary]="true" inputId="isPrivate"></p-checkbox>
-                      <label for="isPrivate" class="ml-2">Nota privada (solo para agentes)</label>
+            <p-tabView styleClass="mt-4">
+              <p-tabPanel header="Conversación">
+                <p-timeline [value]="(comments$ | async) || []" layout="vertical">
+                    <ng-template pTemplate="content" let-comment>
+                        <p-card [header]="'Usuario #' + comment.authorId" [subheader]="(comment.createdAt | date:'full') ?? ''">
+                            <div [innerHTML]="comment.content"></div>
+                        </p-card>
+                    </ng-template>
+                </p-timeline>
+                <form [formGroup]="commentForm" (ngSubmit)="onAddComment()" class="mt-6">
+                  <p-editor formControlName="content" [style]="{'height':'120px'}"></p-editor>
+                  <div class="flex items-center justify-between mt-3">
+                    <div class="flex items-center">
+                        <p-checkbox formControlName="isPrivate" [binary]="true" inputId="isPrivate"></p-checkbox>
+                        <label for="isPrivate" class="ml-2">Nota privada (solo para agentes)</label>
+                    </div>
+                    <button pButton pRipple type="submit" label="Enviar Respuesta" [disabled]="commentForm.invalid"></button>
                   </div>
-                  <button pButton pRipple type="submit" label="Enviar Respuesta" [disabled]="commentForm.invalid"></button>
-                </div>
-              </form>
-            </p-card>
+                </form>
+              </p-tabPanel>
+
+              <p-tabPanel header="Tickets Fusionados" *ngIf="(mergedTickets$ | async)?.length">
+                <p>La siguiente lista muestra los tickets que han sido cerrados y fusionados dentro de este ticket principal.</p>
+                <p-table [value]="(mergedTickets$ | async) || []" styleClass="mt-2">
+                  <ng-template pTemplate="header">
+                      <tr>
+                          <th>ID</th>
+                          <th>Título</th>
+                          <th>Estado</th>
+                      </tr>
+                  </ng-template>
+                  <ng-template pTemplate="body" let-mergedTicket>
+                      <tr>
+                          <td>#{{ mergedTicket.id }}</td>
+                          <td>{{ mergedTicket.title }}</td>
+                          <td>
+                              <p-tag [value]="getStatusText(mergedTicket.status)" [severity]="getStatusSeverity(mergedTicket.status)"></p-tag>
+                          </td>
+                      </tr>
+                  </ng-template>
+                </p-table>
+              </p-tabPanel>
+            </p-tabView>
           </div>
 
           <div class="md:col-span-1">
@@ -129,8 +157,9 @@ import { MergeTicketsDto } from '../../../core/models/merge-tickets.dto';
   `
 })
 export class TicketDetailComponent implements OnInit, OnDestroy {
-  ticket: Ticket | null = null;
+ ticket: Ticket | null = null;
   comments$!: Observable<Comment[]>;
+  mergedTickets$!: Observable<Ticket[]>;
   commentForm: FormGroup;
 
   statusOptions: { label: string, value: number }[];
@@ -174,7 +203,7 @@ export class TicketDetailComponent implements OnInit, OnDestroy {
       takeUntil(this.unsubscribe$),
       switchMap(params => {
         this.ticketId = Number(params.get('id'));
-        this.loadComments();
+        this.loadRelatedData();
         return this.ticketService.getTicketById(this.ticketId);
       })
     ).subscribe(ticketData => {
@@ -196,9 +225,10 @@ export class TicketDetailComponent implements OnInit, OnDestroy {
     });
   }
 
-  loadComments(): void {
+  loadRelatedData(): void {
     if (!this.ticketId) return;
     this.comments$ = this.ticketService.getComments(this.ticketId);
+    this.mergedTickets$ = this.ticketService.getMergedTickets(this.ticketId);
   }
 
   onAddComment(): void {
@@ -214,7 +244,7 @@ export class TicketDetailComponent implements OnInit, OnDestroy {
       next: () => {
         this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Comentario añadido.' });
         this.commentForm.reset({ content: '', isPrivate: false });
-        this.loadComments();
+        this.loadRelatedData();
       },
       error: (err) => {
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo añadir el comentario.' });
@@ -284,5 +314,22 @@ export class TicketDetailComponent implements OnInit, OnDestroy {
         label: key.replace(/([A-Z])/g, ' $1').trim(),
         value: Number(enumObject[key])
       }));
+  }
+
+  // Helper para el template, aunque no lo estemos usando directamente ahora
+  getStatusText(status: TicketStatus): string {
+    return TicketStatus[status]?.replace(/([A-Z])/g, ' $1').trim() || 'Desconocido';
+  }
+
+  getStatusSeverity(status: TicketStatus): string {
+    switch (status) {
+      case TicketStatus.Abierto: return 'info';
+      case TicketStatus.Resuelto: return 'success';
+      case TicketStatus.Cerrado: return 'warning';
+      case TicketStatus.Pendiente:
+      case TicketStatus.EsperandoRespuesta2daLinea:
+      case TicketStatus.EsperandoRespuestaUsuario: return 'danger';
+      default: return 'secondary';
+    }
   }
 }

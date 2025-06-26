@@ -45,4 +45,7 @@ export class TicketService {
   mergeTickets(dto: MergeTicketsDto): Observable<Ticket> {
     return this.http.post<Ticket>(`${this.apiUrl}/merge`, dto);
   }
+  getMergedTickets(ticketId: number): Observable<Ticket[]> {
+    return this.http.get<Ticket[]>(`${this.apiUrl}/${ticketId}/merged`);
+  }
 }
