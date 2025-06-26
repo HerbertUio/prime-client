@@ -4,6 +4,8 @@ import { Observable } from 'rxjs';
 
 import { Ticket } from '../models/ticket.model';
 import { AddCommentDto } from '../models/add-comment.dto';
+import { ChangeStatusDto } from '../models/change-status.dto';
+import { ChangePriorityDto } from '../models/change-priority.dto';
 
 @Injectable({
   providedIn: 'root'
@@ -24,5 +26,11 @@ export class TicketService {
   }
   addComment(ticketId: number, commentData: AddCommentDto): Observable<Comment> {
     return this.http.post<Comment>(`${this.apiUrl}/${ticketId}/comments`, commentData);
+  }
+  changeStatus(ticketId: number, dto: ChangeStatusDto): Observable<Ticket> {
+    return this.http.put<Ticket>(`${this.apiUrl}/${ticketId}/status`, dto);
+  }
+  changePriority(ticketId: number, dto: ChangePriorityDto): Observable<Ticket> {
+    return this.http.put<Ticket>(`${this.apiUrl}/${ticketId}/priority`, dto);
   }
 }
