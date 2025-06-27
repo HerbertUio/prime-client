@@ -25,7 +25,8 @@ import { ButtonModule } from 'primeng/button';
   template: `
     <div class="p-card p-4">
       <div class="flex items-center justify-between mb-4">
-        <div class="flex gap-2">
+          <h2 class="text-2xl font-bold">Gestión de Tickets</h2>
+          <div class="flex gap-2">
             <a routerLink="/tickets/merge" pButton icon="pi pi-compass" label="Fusionar Tickets" class="p-button-outlined"></a>
             <a routerLink="/tickets/new" pButton icon="pi pi-plus" label="Nuevo Ticket"></a>
           </div>
@@ -37,15 +38,17 @@ import { ButtonModule } from 'primeng/button';
         [rows]="10"
         [rowsPerPageOptions]="[10, 25, 50]"
         styleClass="p-datatable-striped"
-        [tableStyle]="{'min-width': '50rem'}">
+        [tableStyle]="{'min-width': '50rem'}"
+        sortField="createdDate"
+        [sortOrder]="-1">
 
         <ng-template pTemplate="header">
           <tr>
-            <th style="width:5rem">ID</th>
-            <th>Título</th>
-            <th>Estado</th>
-            <th>Prioridad</th>
-            <th>Fecha Creación</th>
+            <th style="width:5rem" pSortableColumn="id">ID <p-sortIcon field="id"></p-sortIcon></th>
+            <th pSortableColumn="title">Título <p-sortIcon field="title"></p-sortIcon></th>
+            <th pSortableColumn="status">Estado <p-sortIcon field="status"></p-sortIcon></th>
+            <th pSortableColumn="priority">Prioridad <p-sortIcon field="priority"></p-sortIcon></th>
+            <th pSortableColumn="createdDate">Fecha Creación <p-sortIcon field="createdDate"></p-sortIcon></th>
             <th style="width:8rem">Acciones</th>
           </tr>
         </ng-template>

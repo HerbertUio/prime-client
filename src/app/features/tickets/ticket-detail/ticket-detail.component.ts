@@ -208,15 +208,15 @@ export class TicketDetailComponent implements OnInit, OnDestroy {
     this.priorityOptions = this.getEnumOptions(TicketPriority);
 
     this.agentOptions = [
-      { label: 'Carlos Aguirre', value: 1 },
-      { label: 'Amparo Calderón', value: 2 },
-      { label: 'Jorge Soliz', value: 3 }
+      { label: 'Agente 1', value: 1 },
+      { label: 'Agente 2', value: 2 },
+      { label: 'Agente 3', value: 3 }
     ];
 
     this.groupOptions = [
-      { label: 'Soporte 1ra Línea', value: 1 },
-      { label: 'Soporte 2da Línea - Redes', value: 2 },
-      { label: 'Soporte 2da Línea - DBA', value: 3 }
+      { label: '1ra Línea', value: 1 },
+      { label: '2da Línea', value: 2 },
+      { label: 'DBA', value: 3 }
     ];
   }
 
